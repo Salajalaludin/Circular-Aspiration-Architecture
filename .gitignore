@@ -1,0 +1,6 @@
+.env
+*.csv
+organized_csv/
+oldscrape/
+.ipynb_checkpoints/
+__pycache__/
