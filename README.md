@@ -19,12 +19,31 @@ The project is designed for essay/prototype purposes. It does not claim to repre
    - Applies transparent rule-based classification.
    - Separates citizen candidates, education fess communities, general fess accounts, media, government institutions, political actors, and irrelevant sources.
    - Produces analysis-ready data after filtering contextual sources and irrelevant noise.
+   - Requires education evidence in tweet text that aligns with the retrieval query; the query itself is not treated as relevance evidence.
 
 3. **Before/After Comparison**
    - Compares raw and filtered datasets.
    - Reports tweet counts, unique accounts, follower statistics, engagement metrics, keyword distribution, region distribution, and filter decisions.
 
-4. **Organized CSV Export**
+4. **Preprocessing and IndoBERT Sentiment Analysis**
+   - Preserves sentiment-bearing hashtags, negation, and mapped emoji signals.
+   - Audits spam, short text, exact duplicates, and uncertain predictions.
+   - Stores all class probabilities and computes correctly normalized weighted scores.
+   - Generates a blind manual-validation sample for confusion matrix and macro-F1 evaluation.
+
+5. **LDA Topic Modeling**
+   - Removes near-duplicates and builds region-balanced pseudo-documents from accepted non-neutral discourse while inferring every eligible tweet.
+   - Selects topic count using NPMI coherence, seed stability, topic diversity, and held-out perplexity.
+   - Reports soft topic prevalence weighted by source type across region, keyword, and sentiment.
+   - Exports representative tweets and a manual topic-naming template.
+
+6. **Representation Weighting and Coverage Diagnostics**
+   - Reduces observed domination by prolific accounts and uneven query yields without inferring user demographics.
+   - Compares unweighted, source-only, operational, and one-account sensitivity estimates.
+   - Reports weight trimming, effective sample size, account contribution, and account-clustered bootstrap intervals.
+   - Only enables population calibration when a complete, sourced, and explicitly verified regional reference file is supplied.
+
+7. **Organized CSV Export**
    - The verification notebook can export cleaner CSV tables into grouped folders:
      - raw core tweets,
      - verified labels,
@@ -33,18 +52,49 @@ The project is designed for essay/prototype purposes. It does not claim to repre
 
 ## Files
 
-- `01_scraping_twitter.ipynb`  
+- `01_scraping_twitter.ipynb`
   Scrapes X/Twitter data using Apify and saves raw tweet data.
 
-- `02_data_verification_rule_based.ipynb`  
+- `02_data_verification_rule_based.ipynb`
   Applies rule-based verification, relevance filtering, before/after comparison, and organized CSV export.
 
-- `.gitignore`  
+- `03_preprocessing_sentiment.ipynb`
+  Preprocesses verified tweets, runs three-class IndoBERT sentiment inference, audits uncertainty, and exports weighted summaries.
+
+- `04_lda_topic_modeling.ipynb`
+  Discovers latent issues with LDA, evaluates topic quality, and exports weighted topic distributions and audit tables.
+
+- `05_demographic_weighting.ipynb`
+  Performs representation weighting, coverage diagnostics, sensitivity analysis, and account-clustered uncertainty estimation. Despite the legacy filename, it does not infer individual demographics.
+
+- `06_dashboard.py`
+  Provides an interactive Streamlit dashboard for weighted sentiment, topic prevalence, query coverage, uncertainty, and tweet exploration.
+
+- `requirements.txt`
+  Lists the Python dependencies required by the notebooks.
+
+- `.gitignore`
   Excludes `.env`, generated CSV files, and local output folders.
+
+## Setup
+
+Install the notebook dependencies in the same Python environment used by the Jupyter kernel:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Run the dashboard after notebooks 03-05 have produced their organized outputs:
+
+```bash
+streamlit run 06_dashboard.py
+```
 
 ## Methodological Note
 
 The rule-based verification layer is used to keep the prototype transparent and explainable. Media accounts, political actors, and government institutions are treated as contextual sources rather than direct citizen aspirations. Education-focused fess communities are retained with lower weight because they represent student or applicant discussion spaces, not individual respondents.
+
+The weighting stage corrects only observable imbalances within the collected sample. Query-region metadata indicates the retrieval stratum, not the author's residence. Therefore, weighted estimates must not be presented as population opinions or as proof of demographic representativeness.
 
 ## Disclaimer
 
